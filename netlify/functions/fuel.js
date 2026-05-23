@@ -1,35 +1,38 @@
-export async function handler() {
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
+
+exports.handler = async () => {
   try {
     const url =
       "https://data.statistics.sk/api/v2/datasource/STATDAT/sp0207ts";
 
     const res = await fetch(url);
-    const data = await res.json();
 
-    // JSON-stat parsing
-    const values = data.value;
-    const dims = data.dimension;
+    // 🔥 DEBUG 1: status API
+    console.log("STATUS:", res.status);
 
-    const gasolineIndex =
-      dims.INDICATOR.category.index["Benzín 95 (eur / l)"];
-    const dieselIndex =
-      dims.INDICATOR.category.index["Motorová nafta (eur / l)"];
+    const rawText = await res.text();
 
-    const gasoline95 = values[gasolineIndex];
-    const diesel = values[dieselIndex];
+    // 🔥 DEBUG 2: čo API reálne posiela
+    console.log("RAW RESPONSE:", rawText);
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        gasoline95,
-        diesel,
-        updated: new Date().toISOString(),
+        debug: true,
+        status: res.status,
+        raw: rawText,
       }),
     };
+
   } catch (err) {
+    console.log("ERROR:", err);
+
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Failed to load fuel data" }),
+      body: JSON.stringify({
+        error: err.message,
+      }),
     };
   }
-}
+};
