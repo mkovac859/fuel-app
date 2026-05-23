@@ -1,36 +1,37 @@
-const fetch = (...args) =>
-  import("node-fetch").then(({ default: fetch }) => fetch(...args));
-
 exports.handler = async () => {
-  try {
-    const url =
-      "https://data.statistics.sk/api/v2/datasource/STATDAT/sp0207ts";
+  const url =
+    "https://data.statistics.sk/api/v2/datasource/STATDAT/sp0207ts";
 
+  try {
     const res = await fetch(url);
 
-    // 🔥 DEBUG 1: status API
-    console.log("STATUS:", res.status);
-
+    const status = res.status;
     const rawText = await res.text();
 
-    // 🔥 DEBUG 2: čo API reálne posiela
-    console.log("RAW RESPONSE:", rawText);
+    let data = null;
+    let parseError = null;
+
+    try {
+      data = JSON.parse(rawText);
+    } catch (err) {
+      parseError = err.message;
+    }
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         debug: true,
-        status: res.status,
+        apiStatus: status,
+        parseError,
         raw: rawText,
+        parsed: data,
       }),
     };
-
   } catch (err) {
-    console.log("ERROR:", err);
-
     return {
       statusCode: 500,
       body: JSON.stringify({
+        debug: true,
         error: err.message,
       }),
     };
